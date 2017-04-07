@@ -46,8 +46,8 @@ def _chunks(l, n):
 		yield l[i:i + n]
 
 
-def _gcm_send(data, content_type, application_id):
-	key = get_manager().get_gcm_api_key(application_id)
+def _gcm_send(data, content_type, application_id, api_key=None):
+	key = api_key or get_manager().get_gcm_api_key(application_id)
 
 	headers = {
 		"Content-Type": content_type,
@@ -60,8 +60,8 @@ def _gcm_send(data, content_type, application_id):
 	).read().decode("utf-8")
 
 
-def _fcm_send(data, content_type, application_id):
-	key = get_manager().get_fcm_api_key(application_id)
+def _fcm_send(data, content_type, application_id, api_key=None):
+	key = api_key or get_manager().get_fcm_api_key(application_id)
 
 	headers = {
 		"Content-Type": content_type,
@@ -114,7 +114,7 @@ def _cm_handle_response(registration_ids, response_data, cloud_type, application
 
 def _cm_send_request(
 	registration_ids, data, cloud_type="GCM", application_id=None,
-	use_fcm_notifications=True, **kwargs
+	use_fcm_notifications=True, api_key=None, **kwargs
 ):
 	"""
 	Sends a FCM or GCM notification to one or more registration_ids as json data.
@@ -155,11 +155,11 @@ def _cm_send_request(
 	# Sends requests and handles the response
 	if cloud_type == "GCM":
 		response = json.loads(_gcm_send(
-			json_payload, "application/json", application_id=application_id
+			json_payload, "application/json", application_id=application_id, api_key=api_key
 		))
 	elif cloud_type == "FCM":
 		response = json.loads(_fcm_send(
-			json_payload, "application/json", application_id=application_id
+			json_payload, "application/json", application_id=application_id, api_key=api_key
 		))
 	else:
 		raise ImproperlyConfigured("cloud_type must be FCM or GCM not %s" % str(cloud_type))
@@ -177,7 +177,7 @@ def _cm_handle_canonical_id(canonical_id, current_id, cloud_type):
 		devices.filter(registration_id=current_id).update(registration_id=canonical_id)
 
 
-def send_message(registration_ids, data, cloud_type, application_id=None, **kwargs):
+def send_message(registration_ids, data, cloud_type, application_id=None, api_key=None, **kwargs):
 	"""
 	Sends a FCM (or GCM) notification to one or more registration_ids. The registration_ids
 	can be a list or a single string. This will send the notification as json data.
@@ -206,11 +206,11 @@ def send_message(registration_ids, data, cloud_type, application_id=None, **kwar
 		ret = []
 		for chunk in _chunks(registration_ids, max_recipients):
 			ret.append(_cm_send_request(
-				chunk, data, cloud_type=cloud_type, application_id=application_id, **kwargs
+				chunk, data, cloud_type=cloud_type, application_id=application_id, api_key=api_key, **kwargs
 			))
 		return ret[0] if len(ret) == 1 else ret
 	else:
-		return _cm_send_request(None, data, cloud_type=cloud_type, **kwargs)
+		return _cm_send_request(None, data, cloud_type=cloud_type, api_key=api_key, **kwargs)
 
 
 send_bulk_message = send_message

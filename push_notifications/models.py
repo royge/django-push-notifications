@@ -51,7 +51,7 @@ class GCMDeviceManager(models.Manager):
 
 
 class GCMDeviceQuerySet(models.query.QuerySet):
-	def send_message(self, message, **kwargs):
+	def send_message(self, message, api_key=None, **kwargs):
 		if self:
 			from .gcm import send_message as gcm_send_message
 
@@ -70,7 +70,7 @@ class GCMDeviceQuerySet(models.query.QuerySet):
 						)
 					)
 					if reg_ids:
-						r = gcm_send_message(reg_ids, data, cloud_type, application_id=app_id, **kwargs)
+						r = gcm_send_message(reg_ids, data, cloud_type, application_id=app_id, api_key=api_key, **kwargs)
 						response.append(r)
 
 			return response
@@ -95,7 +95,7 @@ class GCMDevice(Device):
 	class Meta:
 		verbose_name = _("GCM device")
 
-	def send_message(self, message, **kwargs):
+	def send_message(self, message, api_key=None, **kwargs):
 		from .gcm import send_message as gcm_send_message
 
 		data = kwargs.pop("extra", {})
@@ -104,7 +104,7 @@ class GCMDevice(Device):
 
 		return gcm_send_message(
 			self.registration_id, data, self.cloud_message_type,
-			application_id=self.application_id, **kwargs
+			application_id=self.application_id, api_key=api_key, **kwargs
 		)
 
 
