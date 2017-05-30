@@ -9,6 +9,9 @@ class APNSDeviceResource(ModelResource):
 		authorization = Authorization()
 		queryset = APNSDevice.objects.all()
 		resource_name = "device/apns"
+		filtering = {
+			'name': ['exact']
+		}
 
 
 class GCMDeviceResource(ModelResource):
@@ -16,6 +19,9 @@ class GCMDeviceResource(ModelResource):
 		authorization = Authorization()
 		queryset = GCMDevice.objects.all()
 		resource_name = "device/gcm"
+		filtering = {
+			'name': ['exact']
+		}
 
 
 class APNSDeviceAuthenticatedResource(APNSDeviceResource):
