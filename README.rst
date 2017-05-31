@@ -72,7 +72,7 @@ For WNS, you need both the ``WNS_PACKAGE_SECURITY_KEY`` and the ``WNS_SECRET_KEY
 **APNS settings**
 
 - ``APNS_CERTIFICATE``: Absolute path to your APNS certificate file. Certificates with passphrases are not supported.
-- ``APNS_TOPIC``: The topic of the remote notification, which is typically the bundle ID for your app. If you omit this header and your APNs certificate does not specify multiple topics, the APNs server uses the certificate’s Subject as the default topic.
+- ``APNS_TOPIC``: The topic of the remote notification, which is typically the bundle ID for your app.
 - ``APNS_USE_ALTERNATIVE_PORT``: Use port 2197 for APNS, instead of default port 443.
 - ``APNS_USE_SANDBOX``: Use 'api.development.push.apple.com', instead of default host 'api.push.apple.com'.
 
@@ -81,7 +81,7 @@ For WNS, you need both the ``WNS_PACKAGE_SECURITY_KEY`` and the ``WNS_SECRET_KEY
 - ``FCM_API_KEY``: Your API key for Firebase Cloud Messaging.
 - ``FCM_POST_URL``: The full url that FCM notifications will be POSTed to. Defaults to https://fcm.googleapis.com/fcm/send.
 - ``FCM_MAX_RECIPIENTS``: The maximum amount of recipients that can be contained per bulk message. If the ``registration_ids`` list is larger than that number, multiple bulk messages will be sent. Defaults to 1000 (the maximum amount supported by FCM).
-- ``FCM_ERROR_TIMEOUT``: The timeout on GCM POSTs.
+- ``FCM_ERROR_TIMEOUT``: The timeout on FCM POSTs.
 - ``GCM_API_KEY``, ``GCM_POST_URL``, ``GCM_MAX_RECIPIENTS``, ``GCM_ERROR_TIMEOUT``: Same parameters for GCM
 
 **WNS settings**
