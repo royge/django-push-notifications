@@ -10,6 +10,7 @@ try:
     from urllib.request import Request, urlopen
 except ImportError:
     # Python 2 support
+    import urllib2
     from urllib2 import Request, urlopen
 
 from django.core.exceptions import ImproperlyConfigured
@@ -66,12 +67,19 @@ def _pushy_send_json(
         sort_keys=True
     ).encode("utf-8")  # keys sorted for tests
 
-    if key:
-        result = json.loads(_pushy_send(data, "application/json", key))
-    else:
-        result = json.loads(_pushy_send(data, "application/json"))
+    try:
+        if key:
+            result = _pushy_send(data, "application/json", key)
+        else:
+            result = _pushy_send(data, "application/json")
+    except Exception, e:
+        if isinstance(e, urllib2.HTTPError):
+            raise PushyError(
+                "Pushy API returned HTTP error " + str(e.code) + ": " + e.read()
+            )
+        raise PushyError(e)
 
-    if result["failure"]:
+    if "error" in result:
         raise PushyError(result)
 
     return result

@@ -2,8 +2,13 @@ import json
 import mock
 from django.test import TestCase
 from django.utils import timezone
-from push_notifications.models import GCMDevice, APNSDevice
-from tests.mock_responses import GCM_PLAIN_RESPONSE, GCM_MULTIPLE_JSON_RESPONSE
+from push_notifications.models import GCMDevice, APNSDevice, PushyDevice
+from tests.mock_responses import (
+    GCM_PLAIN_RESPONSE,
+    GCM_MULTIPLE_JSON_RESPONSE,
+    PUSHY_JSON_RESPONSE,
+    PUSHY_MULTIPLE_JSON_RESPONSE,
+)
 
 
 class ModelTestCase(TestCase):
@@ -17,6 +22,14 @@ class ModelTestCase(TestCase):
 
     def test_can_create_save_device(self):
         device = APNSDevice.objects.create(
+            registration_id="a valid registration id"
+        )
+        assert device.id is not None
+        assert device.date_created is not None
+        assert device.date_created.date() == timezone.now().date()
+
+    def test_can_create_pushy_device(self):
+        device = PushyDevice.objects.create(
             registration_id="a valid registration id"
         )
         assert device.id is not None
@@ -122,3 +135,32 @@ class ModelTestCase(TestCase):
         with mock.patch("push_notifications.apns._apns_pack_frame") as p:
             device.send_message("Hello world", extra={"foo": "bar"}, socket=socket, identifier=1, expiration=2, priority=5)
             p.assert_called_once_with("abc", b'{"aps":{"alert":"Hello world"},"foo":"bar"}', 1, 2, 5)
+
+    def test_pushy_send_message(self):
+        device = PushyDevice.objects.create(
+            registration_id="abc",
+        )
+        with mock.patch(
+            "push_notifications.pushy._pushy_send",
+                return_value=PUSHY_JSON_RESPONSE) as p:
+            device.send_message("Hello world")
+            p.assert_called_once_with(
+                b'{"data":{"message":"Hello world"},"registration_ids":["abc"]}',
+                'application/json'
+            )
+
+    def test_pushy_send_message_multiple_devices(self):
+        PushyDevice.objects.create(
+            registration_id="abc",
+        )
+        PushyDevice.objects.create(
+            registration_id="abc1",
+        )
+        with mock.patch(
+            "push_notifications.pushy._pushy_send",
+                return_value=PUSHY_MULTIPLE_JSON_RESPONSE) as p:
+            PushyDevice.objects.all().send_message("Hello world")
+            p.assert_called_once_with(
+                b'{"data":{"message":"Hello world"},"registration_ids":["abc","abc1"]}',
+                'application/json'
+            )

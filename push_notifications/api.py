@@ -24,16 +24,6 @@ class GCMDeviceResource(ModelResource):
 		}
 
 
-class PushyDeviceResource(ModelResource):
-    class Meta:
-        authorization = Authorization()
-        queryset = PushyDevice.objects.all()
-        resource_name = "device/pushy"
-        filtering = {
-            'name': ['exact']
-        }
-
-
 class APNSDeviceAuthenticatedResource(APNSDeviceResource):
 	# user = ForeignKey(UserResource, "user")
 
@@ -56,6 +46,16 @@ class GCMDeviceAuthenticatedResource(GCMDeviceResource):
 	def obj_create(self, bundle, **kwargs):
 		# See https://github.com/toastdriven/django-tastypie/issues/854
 		return super(GCMDeviceAuthenticatedResource, self).obj_create(bundle, user=bundle.request.user, **kwargs)
+
+
+class PushyDeviceResource(ModelResource):
+    class Meta:
+        authorization = Authorization()
+        queryset = PushyDevice.objects.all()
+        resource_name = "device/pushy"
+        filtering = {
+            'name': ['exact']
+        }
 
 
 class PushyDeviceAuthenticatedResource(PushyDeviceResource):

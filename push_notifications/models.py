@@ -64,6 +64,43 @@ class GCMDevice(Device):
 		return gcm_send_message(registration_id=self.registration_id, data=data, **kwargs)
 
 
+class APNSDeviceManager(models.Manager):
+	def get_queryset(self):
+		return APNSDeviceQuerySet(self.model)
+	get_query_set = get_queryset  # Django < 1.6 compatiblity
+
+
+class APNSDeviceQuerySet(models.query.QuerySet):
+	def send_message(self, message, **kwargs):
+		if self:
+			from .apns import apns_send_bulk_message
+			reg_ids = list(self.values_list("registration_id", flat=True))
+			return apns_send_bulk_message(registration_ids=reg_ids, alert=message, **kwargs)
+
+
+class APNSDevice(Device):
+	device_id = UUIDField(verbose_name=_("Device ID"), blank=True, null=True, db_index=True,
+		help_text="UDID / UIDevice.identifierForVendor()")
+	registration_id = models.CharField(verbose_name=_("Registration ID"), max_length=64, unique=True)
+
+	objects = APNSDeviceManager()
+
+	class Meta:
+		verbose_name = _("APNS device")
+
+	def send_message(self, message, **kwargs):
+		from .apns import apns_send_message
+
+		return apns_send_message(registration_id=self.registration_id, alert=message, **kwargs)
+
+
+# This is an APNS-only function right now, but maybe GCM will implement it
+# in the future.  But the definition of 'expired' may not be the same. Whatevs
+def get_expired_tokens():
+	from .apns import apns_fetch_inactive_ids
+	return apns_fetch_inactive_ids()
+
+
 class PushyDeviceManager(models.Manager):
     def get_queryset(self):
         return PushyDeviceQuerySet(self.model)
@@ -112,40 +149,3 @@ class PushyDevice(Device):
             registration_id=self.registration_id,
             data=data,
             **kwargs)
-
-
-class APNSDeviceManager(models.Manager):
-	def get_queryset(self):
-		return APNSDeviceQuerySet(self.model)
-	get_query_set = get_queryset  # Django < 1.6 compatiblity
-
-
-class APNSDeviceQuerySet(models.query.QuerySet):
-	def send_message(self, message, **kwargs):
-		if self:
-			from .apns import apns_send_bulk_message
-			reg_ids = list(self.values_list("registration_id", flat=True))
-			return apns_send_bulk_message(registration_ids=reg_ids, alert=message, **kwargs)
-
-
-class APNSDevice(Device):
-	device_id = UUIDField(verbose_name=_("Device ID"), blank=True, null=True, db_index=True,
-		help_text="UDID / UIDevice.identifierForVendor()")
-	registration_id = models.CharField(verbose_name=_("Registration ID"), max_length=64, unique=True)
-
-	objects = APNSDeviceManager()
-
-	class Meta:
-		verbose_name = _("APNS device")
-
-	def send_message(self, message, **kwargs):
-		from .apns import apns_send_message
-
-		return apns_send_message(registration_id=self.registration_id, alert=message, **kwargs)
-
-
-# This is an APNS-only function right now, but maybe GCM will implement it
-# in the future.  But the definition of 'expired' may not be the same. Whatevs
-def get_expired_tokens():
-	from .apns import apns_fetch_inactive_ids
-	return apns_fetch_inactive_ids()

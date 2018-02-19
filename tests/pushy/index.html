@@ -1,0 +1,18 @@
+<head>
+  <script src="https://sdk.pushy.me/web/1.0.0/pushy-sdk.js"></script>
+  <script>
+    // Register device for push notifications
+    Pushy.register().then(function (deviceToken) {
+      // Print device token to console
+      text = 'Pushy device token: ' + deviceToken;
+      console.log(text);
+      document.getElementById('token').innerHTML = text;
+    }).catch(function (err) {
+      // Handle registration errors
+      console.error(err);
+    });
+  </script>
+</head>
+<body>
+      <div id="token"></div>
+</body>
