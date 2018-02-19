@@ -1,12 +1,11 @@
 django-push-notifications
 =========================
 
-.. image:: https://api.travis-ci.org/jleclanche/django-push-notifications.png
-	:target: https://travis-ci.org/jleclanche/django-push-notifications
+This is fork of https://github.com/jazzband/django-push-notifications
 
 A minimal Django app that implements Device models that can send messages through APNS and GCM.
 
-The app implements two models: GCMDevice and APNSDevice. Those models share the same attributes:
+The app implements three models: GCMDevice, APNSDevice and PushyDevice. Those models share the same attributes:
  - name (optional): A name for the device.
  - is_active (default True): A boolean that determines whether the device will be sent notifications.
  - user (optional): A foreign key to auth.User, if you wish to link the device to a specific user.
@@ -15,7 +14,7 @@ The app implements two models: GCMDevice and APNSDevice. Those models share the 
 
 
 The app also implements an admin panel, through which you can test single and bulk notifications. Select one or more
-GCM or APNS devices and in the action dropdown, select "Send test message" or "Send test message in bulk", accordingly.
+GCM or APNS or Pushy devices and in the action dropdown, select "Send test message" or "Send test message in bulk", accordingly.
 Note that sending a non-bulk test message to more than one device will just iterate over the devices and send multiple
 single messages.
 
@@ -33,9 +32,9 @@ Django versions older than 1.8 require 'django-uuidfield' to be installed.
 
 Setup
 -----
-You can install the library directly from pypi using pip::
+You can install the library directly from GIT repo::
 
-	$ pip install django-push-notifications
+	$ pip install -e git+git@bitbucket.org:thinkittwice/django-push-notifications.git
 
 
 Edit your settings.py file::
@@ -48,6 +47,7 @@ Edit your settings.py file::
 	PUSH_NOTIFICATIONS_SETTINGS = {
 		"GCM_API_KEY": "<your api key>",
 		"APNS_CERTIFICATE": "/path/to/your/certificate.pem",
+		"PUSHY_API_KEY": "<your pushy api key>",
 	}
 
 Note: If you are planning on running your project with `DEBUG=True`, then make sure you have set the
@@ -74,6 +74,8 @@ For APNS, you are required to include APNS_CERTIFICATE.
 - APNS_PORT: The port used along with APNS_HOST. Defaults to 2195.
 - GCM_POST_URL: The full url that GCM notifications will be POSTed to. Defaults to https://android.googleapis.com/gcm/send.
 - GCM_MAX_RECIPIENTS: The maximum amount of recipients that can be contained per bulk message. If the registration_ids list is larger than that number, multiple bulk messages will be sent. Defaults to 1000 (the maximum amount supported by GCM).
+- PUSHY_API_KEY: Your API key for Pushy.
+- PUSHY_API_URL: Your Pushy API URL.
 
 Sending messages
 ----------------
@@ -81,7 +83,7 @@ GCM and APNS services have slightly different semantics. The app tries to offer 
 
 ::
 
-	from push_notifications.models import APNSDevice, GCMDevice
+	from push_notifications.models import APNSDevice, GCMDevice, PushyDevice
 
 	device = GCMDevice.objects.get(registration_id=gcm_reg_id)
 	# The first argument will be sent as "message" to the intent extras Bundle
@@ -108,7 +110,7 @@ Sending messages in bulk
 ------------------------
 ::
 
-	from push_notifications.models import APNSDevice, GCMDevice
+	from push_notifications.models import APNSDevice, GCMDevice, PushyDevice
 
 	devices = GCMDevice.objects.filter(user__first_name="James")
 	devices.send_message("Happy name day!")
@@ -140,6 +142,7 @@ Exceptions
 - gcm.GCMError(NotificationError): An error was returned by GCM. This is never raised when using bulk notifications.
 - apns.APNSError(NotificationError): Something went wrong upon sending APNS notifications.
 - apns.APNSDataOverflow(APNSError): The APNS payload exceeds its maximum size and cannot be sent.
+- pushy.PushyError(NotificationError): An error was returned by Pushy.
 
 
 Tastypie support
@@ -151,14 +154,16 @@ The following resources are available:
 
 - APNSDeviceResource
 - GCMDeviceResource
+- PushyDeviceResource
 - APNSDeviceAuthenticatedResource
 - GCMDeviceAuthenticatedResource
+- PushyDeviceAuthenticatedResource
 
 The base device resources will not ask for authentication, while the authenticated ones will link the logged in user to
 the device they register.
 Subclassing the authenticated resources in order to add a SameUserAuthentication and a user ForeignKey is recommended.
 
-When registered, the APIs will show up at <api_root>/device/apns and <api_root>/device/gcm, respectively.
+When registered, the APIs will show up at <api_root>/device/apns, <api_root>/device/gcm and <api_root>/device/pushy, respectively.
 
 
 Python 3 support

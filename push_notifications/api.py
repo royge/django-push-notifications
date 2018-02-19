@@ -1,7 +1,7 @@
 from tastypie.authorization import Authorization
 from tastypie.authentication import BasicAuthentication
 from tastypie.resources import ModelResource
-from .models import APNSDevice, GCMDevice
+from .models import APNSDevice, GCMDevice, PushyDevice
 
 
 class APNSDeviceResource(ModelResource):
@@ -22,6 +22,16 @@ class GCMDeviceResource(ModelResource):
 		filtering = {
 			'name': ['exact']
 		}
+
+
+class PushyDeviceResource(ModelResource):
+    class Meta:
+        authorization = Authorization()
+        queryset = PushyDevice.objects.all()
+        resource_name = "device/pushy"
+        filtering = {
+            'name': ['exact']
+        }
 
 
 class APNSDeviceAuthenticatedResource(APNSDeviceResource):
@@ -46,3 +56,15 @@ class GCMDeviceAuthenticatedResource(GCMDeviceResource):
 	def obj_create(self, bundle, **kwargs):
 		# See https://github.com/toastdriven/django-tastypie/issues/854
 		return super(GCMDeviceAuthenticatedResource, self).obj_create(bundle, user=bundle.request.user, **kwargs)
+
+
+class PushyDeviceAuthenticatedResource(PushyDeviceResource):
+    class Meta(PushyDeviceResource.Meta):
+        authentication = BasicAuthentication()
+
+    def obj_create(self, bundle, **kwargs):
+        # See https://github.com/toastdriven/django-tastypie/issues/854
+        return super(PushyDeviceAuthenticatedResource, self).obj_create(
+            bundle,
+            user=bundle.request.user,
+            **kwargs)

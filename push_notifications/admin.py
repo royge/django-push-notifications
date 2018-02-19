@@ -1,6 +1,11 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
-from .models import APNSDevice, GCMDevice, get_expired_tokens
+from .models import (
+    APNSDevice,
+    GCMDevice,
+    PushyDevice,
+    get_expired_tokens
+)
 
 
 def _user__username():
@@ -64,3 +69,4 @@ class DeviceAdmin(admin.ModelAdmin):
 
 admin.site.register(APNSDevice, DeviceAdmin)
 admin.site.register(GCMDevice, DeviceAdmin)
+admin.site.register(PushyDevice, DeviceAdmin)

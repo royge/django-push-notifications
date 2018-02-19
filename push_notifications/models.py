@@ -64,6 +64,56 @@ class GCMDevice(Device):
 		return gcm_send_message(registration_id=self.registration_id, data=data, **kwargs)
 
 
+class PushyDeviceManager(models.Manager):
+    def get_queryset(self):
+        return PushyDeviceQuerySet(self.model)
+    get_query_set = get_queryset  # Django < 1.6 compatiblity
+
+
+class PushyDeviceQuerySet(models.query.QuerySet):
+    def send_message(self, message, **kwargs):
+        if self:
+            from .pushy import pushy_send_bulk_message
+
+            data = kwargs.pop("extra", {})
+            if message is not None:
+                data["message"] = message
+
+            reg_ids = list(self.values_list("registration_id", flat=True))
+            return pushy_send_bulk_message(
+                registration_ids=reg_ids,
+                data=data,
+                **kwargs)
+
+
+class PushyDevice(Device):
+    # device_id is required in admin, but there is no equivalent in pushy
+    device_id = HexIntegerField(
+        verbose_name=_("Device ID"),
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text=_(
+            "Ignore this field for now."
+        ))
+    registration_id = models.TextField(verbose_name=_("Registration ID"))
+
+    objects = PushyDeviceManager()
+
+    class Meta:
+        verbose_name = _("Pushy device")
+
+    def send_message(self, message, **kwargs):
+        from .pushy import pushy_send_message
+        data = kwargs.pop("extra", {})
+        if message is not None:
+                data["message"] = message
+        return pushy_send_message(
+            registration_id=self.registration_id,
+            data=data,
+            **kwargs)
+
+
 class APNSDeviceManager(models.Manager):
 	def get_queryset(self):
 		return APNSDeviceQuerySet(self.model)
