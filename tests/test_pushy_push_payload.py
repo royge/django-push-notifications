@@ -38,7 +38,8 @@ class PushyPushPayloadTest(TestCase):
             pushy_send_message("abc", payload)
             p.assert_called_once_with(
                 b'{"data":' + payload_string + b',"registration_ids":["abc"]}',
-                "application/json")
+                "application/json"
+            )
 
     def test_bulk_push_payload(self):
         with mock.patch("push_notifications.pushy._pushy_send",
@@ -46,7 +47,8 @@ class PushyPushPayloadTest(TestCase):
             pushy_send_bulk_message(["abc", "123"], {"message": "Hello world"})
             p.assert_called_once_with(
                 b'{"data":{"message":"Hello world"},"registration_ids":["abc","123"]}',
-                "application/json")
+                "application/json"
+            )
 
 
 class PushyPushPayloadTestCustomKey(TestCase):

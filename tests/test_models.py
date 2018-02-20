@@ -140,9 +140,8 @@ class ModelTestCase(TestCase):
         device = PushyDevice.objects.create(
             registration_id="abc",
         )
-        with mock.patch(
-            "push_notifications.pushy._pushy_send",
-                return_value=PUSHY_JSON_RESPONSE) as p:
+        with mock.patch("push_notifications.pushy._pushy_send",
+                        return_value=PUSHY_JSON_RESPONSE) as p:
             device.send_message("Hello world")
             p.assert_called_once_with(
                 b'{"data":{"message":"Hello world"},"registration_ids":["abc"]}',
@@ -156,9 +155,8 @@ class ModelTestCase(TestCase):
         PushyDevice.objects.create(
             registration_id="abc1",
         )
-        with mock.patch(
-            "push_notifications.pushy._pushy_send",
-                return_value=PUSHY_MULTIPLE_JSON_RESPONSE) as p:
+        with mock.patch("push_notifications.pushy._pushy_send",
+                        return_value=PUSHY_MULTIPLE_JSON_RESPONSE) as p:
             PushyDevice.objects.all().send_message("Hello world")
             p.assert_called_once_with(
                 b'{"data":{"message":"Hello world"},"registration_ids":["abc","abc1"]}',

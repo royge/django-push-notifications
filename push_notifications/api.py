@@ -10,7 +10,8 @@ class APNSDeviceResource(ModelResource):
 		queryset = APNSDevice.objects.all()
 		resource_name = "device/apns"
 		filtering = {
-			'name': ['exact']
+			'name': ['exact'],
+			'registration_id': ['exact']
 		}
 
 
@@ -20,7 +21,8 @@ class GCMDeviceResource(ModelResource):
 		queryset = GCMDevice.objects.all()
 		resource_name = "device/gcm"
 		filtering = {
-			'name': ['exact']
+			'name': ['exact'],
+			'registration_id': ['exact']
 		}
 
 
@@ -54,7 +56,8 @@ class PushyDeviceResource(ModelResource):
         queryset = PushyDevice.objects.all()
         resource_name = "device/pushy"
         filtering = {
-            'name': ['exact']
+            'name': ['exact'],
+            'registration_id': ['exact'],
         }
 
 
