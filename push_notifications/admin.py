@@ -1,10 +1,13 @@
 from django.apps import apps
 from django.contrib import admin, messages
 from django.utils.translation import ugettext_lazy as _
+
 from .apns import APNSServerError
 from .gcm import GCMError
-from .models import APNSDevice, GCMDevice, WNSDevice
+from .models import APNSDevice, GCMDevice, WebPushDevice, WNSDevice
 from .settings import PUSH_NOTIFICATIONS_SETTINGS as SETTINGS
+from .webpush import WebPushError
+
 
 User = apps.get_model(*SETTINGS["USER_MODEL"].split("."))
 
@@ -40,6 +43,8 @@ class DeviceAdmin(admin.ModelAdmin):
 				errors.append(str(e))
 			except APNSServerError as e:
 				errors.append(e.status)
+			except WebPushError as e:
+				errors.append(e.message)
 
 			if bulk:
 				break
@@ -47,21 +52,33 @@ class DeviceAdmin(admin.ModelAdmin):
 		# Because NotRegistered and InvalidRegistration do not throw GCMError
 		# catch them here to display error msg.
 		if not bulk:
-			for r in list(ret):
-				if r in ("Error=NotRegistered", "Error=InvalidRegistration"):
-					errors.append(r)
-					ret.remove(r)
+			for r in ret:
+				if "error" in r["results"][0]:
+					errors.append(r["results"][0]["error"])
 		else:
-			errors = [",".join(r.values()) for r in ret[0][0]["results"] if "error" in r]
+			try:
+				errors = [r["error"] for r in ret[0][0]["results"] if "error" in r]
+			except TypeError:
+				for entry in ret[0][0]:
+					errors = errors + [r["error"] for r in entry["results"] if "error" in r]
 		if errors:
 			self.message_user(
 				request, _("Some messages could not be processed: %r" % (", ".join(errors))),
 				level=messages.ERROR
 			)
 		if ret:
-			if not bulk:
-				ret = ", ".join(ret)
-			elif ret[0][0]["success"] == 0:
+			if bulk:
+				# When the queryset exceeds the max_recipients value, the
+				# send_message method returns a list of dicts, one per chunk
+				try:
+					success = ret[0][0]["success"]
+				except TypeError:
+					success = 0
+					for entry in ret[0][0]:
+						success = success + entry["success"]
+				if success == 0:
+					return
+			elif len(errors) == len(ret):
 				return
 			if errors:
 				msg = _("Some messages were sent: %s" % (ret))
@@ -100,3 +117,4 @@ class GCMDeviceAdmin(DeviceAdmin):
 admin.site.register(APNSDevice, DeviceAdmin)
 admin.site.register(GCMDevice, GCMDeviceAdmin)
 admin.site.register(WNSDevice, DeviceAdmin)
+admin.site.register(WebPushDevice, DeviceAdmin)

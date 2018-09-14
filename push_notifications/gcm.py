@@ -7,15 +7,11 @@ https://firebase.google.com/docs/cloud-messaging/
 
 import json
 
-try:
-	from urllib.request import Request, urlopen
-except ImportError:
-	# Python 2 support
-	from urllib2 import Request, urlopen
-
 from django.core.exceptions import ImproperlyConfigured
-from . import NotificationError
+
+from .compat import Request, urlopen
 from .conf import get_manager
+from .exceptions import NotificationError
 from .models import GCMDevice
 
 
@@ -90,7 +86,7 @@ def _cm_handle_response(registration_ids, response_data, cloud_type, application
 					ids_to_remove.append(registration_ids[index])
 				else:
 					throw_error = True
-
+			result["original_registration_id"] = registration_ids[index]
 			# If registration_id is set, replace the original ID with the new value (canonical ID)
 			# in your server database. Note that the original ID is not part of the result, you need
 			# to obtain it from the list of registration_ids in the request (using the same index).
