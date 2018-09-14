@@ -12,3 +12,11 @@ build
 
 # virtualenv
 .env
+
+# vim
+*.swp
+*.retry
+
+# local files
+manage.py
+settings.py

@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.management.base import BaseCommand
 
 
@@ -17,13 +19,13 @@ class Command(BaseCommand):
         )
 
         extra_json = {
-            't': 't',
+            't': 1,
             'id': 1,
             'u': 0,
-            'a': 'avatar',
+            'a': 'http://avatarurl.com',
             'n': 'name',
-            'ts': 'timestamp',
-            'r': 'i don\'t know this'
+            'ts': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+            'r': '[0, 1]'
         }
 
         try:
